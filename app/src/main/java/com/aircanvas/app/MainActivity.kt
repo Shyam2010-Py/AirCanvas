@@ -50,15 +50,15 @@ fun AirCanvasApp() {
     var brushSize by remember { mutableIntStateOf(2) }
     var eraserSize by remember { mutableIntStateOf(7) }
     
-    // Path and Drawing State
+
     val paths = remember { mutableStateListOf<Pair<Tool, List<Offset>>>() }
     var currentPathPoints = remember { mutableStateOf(listOf<Offset>()) }
     
-    // Buffer State
+
     var pendingPoints by remember { mutableStateOf(listOf<Offset>()) }
     var lastBufferedPoint by remember { mutableStateOf<Offset?>(null) }
 
-    // Actual size of the drawing canvas in Android pixels.
+
     var drawingCanvasSize by remember { mutableStateOf(IntSize.Zero) }
 
     val connectionStatus = client.connectionStatus.collectAsState()
@@ -73,7 +73,7 @@ fun AirCanvasApp() {
         isConnected = connectionStatus.value == ConnectionStatus.CONNECTED
     }
 
-    // 20ms Buffer Logic for Pen/Eraser
+
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(20)
@@ -81,7 +81,7 @@ fun AirCanvasApp() {
                 val pointsToProcess = pendingPoints
                 pendingPoints = emptyList()
                 
-                // Use lastPoint from previous batch to prevent gaps
+
                 var prev = lastBufferedPoint ?: pointsToProcess.first()
                 
                 for (point in pointsToProcess) {
@@ -128,7 +128,7 @@ fun AirCanvasApp() {
                 }
             }
 
-            // Drawing Area
+
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -160,7 +160,7 @@ fun AirCanvasApp() {
                                     val start = points.first()
                                     val end = points.last()
                                     
-                                    // Handle L, R, C_S commands on Drag End
+
                                     when (currentTool) {
                                         Tool.LINE -> {
                                             val p1 = mapper.mapToOled(start.x, start.y, drawingCanvasSize.width.toFloat(), drawingCanvasSize.height.toFloat())
@@ -178,7 +178,7 @@ fun AirCanvasApp() {
                                             val radius = (Math.sqrt(Math.pow((pEnd.x - pCenter.x).toDouble(), 2.0) + Math.pow((pEnd.y - pCenter.y).toDouble(), 2.0))).toInt().coerceIn(1, 63)
                                             client.sendCommand(AirCanvasProtocol.CMD_CIRCLE, pCenter.x.toInt(), pCenter.y.toInt(), size = radius)
                                         }
-                                        else -> { /* Pen/Eraser handled by buffer */ }
+                                        else -> {  }
                                     }
                                     paths.add(currentTool to points)
                                 }
@@ -189,7 +189,7 @@ fun AirCanvasApp() {
                     }
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    // Draw historical paths
+
                     paths.forEach { (tool, points) ->
                         if (points.size > 1) {
                             val strokeWidth = if (tool == Tool.ERASER) eraserSize.toFloat() else brushSize.toFloat()
@@ -215,7 +215,7 @@ fun AirCanvasApp() {
                             }
                         }
                     }
-                    // Draw current path
+
                     if (currentPathPoints.value.size > 1) {
                         val strokeWidth = if (currentTool == Tool.ERASER) eraserSize.toFloat() else brushSize.toFloat()
                         val color = if (currentTool == Tool.ERASER) Color.Black else Color.Cyan
